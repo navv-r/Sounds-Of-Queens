@@ -1,0 +1,250 @@
+/* ── Page shell ── */
+.map-page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #071828;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ════════════════════════════════════════════════════
+   CLOUD OVERLAY
+   Four large soft blobs cover the viewport, then each
+   gets its own @keyframes trajectory — a brief 6%
+   "breath" swell, then a hard acceleration to corner.
+════════════════════════════════════════════════════ */
+.map-clouds {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+}
+
+/* Base cloud shape */
+.mc {
+  position: absolute;
+  background: radial-gradient(ellipse at 45% 45%,
+    rgba(228, 243, 252, 0.98) 0%,
+    rgba(210, 234, 248, 0.92) 55%,
+    rgba(190, 220, 242, 0.70) 100%
+  );
+  border-radius: 50%;
+  filter: blur(28px);
+  will-change: transform, opacity, filter;
+}
+
+/* Cover all four quadrants — oversized so no gap shows */
+.mc--a { width: 78vw; height: 70vh; top: -22%;  left: -22%; }
+.mc--b { width: 72vw; height: 66vh; top: -18%;  right: -20%; }
+.mc--c { width: 76vw; height: 68vh; bottom: -22%; left: -18%; }
+.mc--d { width: 74vw; height: 65vh; bottom: -20%; right: -22%; }
+
+/* ── Fly-away keyframes ── */
+/* Each cloud:  0% = rest  |  6% = slight swell (breath)  |  100% = scattered to corner */
+
+@keyframes flyA {
+  0%   { transform: translate(0,    0)    scale(1)    rotate(0deg);   opacity: 1;   filter: blur(28px); }
+  6%   { transform: translate(-1vw, -1vh) scale(1.07) rotate(-1deg);  opacity: 1;   filter: blur(26px); }
+  40%  { transform: translate(-30vw,-25vh) scale(0.85) rotate(-6deg); opacity: 0.8; filter: blur(30px); }
+  100% { transform: translate(-88vw,-80vh) scale(0.3) rotate(-18deg); opacity: 0;   filter: blur(48px); }
+}
+
+@keyframes flyB {
+  0%   { transform: translate(0,    0)   scale(1)    rotate(0deg);   opacity: 1;   filter: blur(28px); }
+  6%   { transform: translate(1vw, -1vh) scale(1.07) rotate(1deg);   opacity: 1;   filter: blur(26px); }
+  40%  { transform: translate(30vw,-25vh) scale(0.85) rotate(6deg);  opacity: 0.8; filter: blur(30px); }
+  100% { transform: translate(88vw,-80vh) scale(0.3) rotate(18deg);  opacity: 0;   filter: blur(48px); }
+}
+
+@keyframes flyC {
+  0%   { transform: translate(0,   0)    scale(1)    rotate(0deg);   opacity: 1;   filter: blur(28px); }
+  6%   { transform: translate(-1vw, 1vh) scale(1.07) rotate(1deg);   opacity: 1;   filter: blur(26px); }
+  40%  { transform: translate(-28vw,25vh) scale(0.85) rotate(8deg);  opacity: 0.8; filter: blur(30px); }
+  100% { transform: translate(-84vw,78vh) scale(0.3) rotate(16deg);  opacity: 0;   filter: blur(48px); }
+}
+
+@keyframes flyD {
+  0%   { transform: translate(0,  0)    scale(1)    rotate(0deg);    opacity: 1;   filter: blur(28px); }
+  6%   { transform: translate(1vw, 1vh) scale(1.07) rotate(-1deg);   opacity: 1;   filter: blur(26px); }
+  40%  { transform: translate(28vw,25vh) scale(0.85) rotate(-8deg);  opacity: 0.8; filter: blur(30px); }
+  100% { transform: translate(84vw,78vh) scale(0.3) rotate(-16deg);  opacity: 0;   filter: blur(48px); }
+}
+
+/*
+  Stagger: a=0ms, d=40ms, b=75ms, c=110ms
+  Slightly different durations so they don't feel mechanical.
+*/
+.map-clouds--away .mc--a { animation: flyA 1.05s cubic-bezier(0.30, 0, 0.82, 0.72) 0.00s forwards; }
+.map-clouds--away .mc--d { animation: flyD 1.00s cubic-bezier(0.30, 0, 0.82, 0.72) 0.04s forwards; }
+.map-clouds--away .mc--b { animation: flyB 1.10s cubic-bezier(0.30, 0, 0.82, 0.72) 0.08s forwards; }
+.map-clouds--away .mc--c { animation: flyC 1.08s cubic-bezier(0.30, 0, 0.82, 0.72) 0.12s forwards; }
+
+/* ════════════════════════════════════════════════════
+   MAP CONTAINER
+   Starts blurred, dark, and very slightly zoomed-in.
+   Transitions to sharp once clouds begin departing.
+   Delay 0.48s so the map appears mid-cloud-animation
+   (feels like the clouds are unveiling something real).
+════════════════════════════════════════════════════ */
+.map-container {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  opacity: 0;
+  filter: blur(22px) brightness(0.25) saturate(0.4);
+  transform: scale(1.07);
+
+  transition:
+    opacity   1.0s cubic-bezier(0.22, 1, 0.36, 1) 0.48s,
+    filter    1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.48s,
+    transform 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.48s;
+}
+
+.map-container--in {
+  opacity: 1;
+  filter: blur(0px) brightness(1) saturate(1);
+  transform: scale(1);
+}
+
+/* ════════════════════════════════════════════════════
+   HEADER  — slides down from above after map appears
+════════════════════════════════════════════════════ */
+.map-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 44px;
+  background: linear-gradient(to bottom,
+    rgba(5, 18, 30, 0.90) 0%,
+    rgba(5, 18, 30, 0.30) 70%,
+    transparent 100%
+  );
+
+  opacity: 0;
+  transform: translateY(-24px);
+  transition:
+    opacity   0.60s cubic-bezier(0.22, 1, 0.36, 1) 0.82s,
+    transform 0.60s cubic-bezier(0.22, 1, 0.36, 1) 0.82s;
+}
+
+.map-header--in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.map-back {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.map-back:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.map-title-block { text-align: center; }
+
+.map-overline {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  margin: 0 0 5px;
+}
+
+.map-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.3rem, 2.2vw, 1.9rem);
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7);
+}
+
+.map-header-spacer { width: 120px; }
+
+/* ════════════════════════════════════════════════════
+   HINT  — last element to appear
+════════════════════════════════════════════════════ */
+.map-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  z-index: 20;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0);
+  pointer-events: none;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+
+  transition:
+    color     0.55s ease 1.10s,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) 1.10s;
+}
+
+.map-hint--in {
+  color: rgba(255, 255, 255, 0.28);
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Hover tooltip ── */
+.map-tooltip {
+  position: fixed;
+  z-index: 30;
+  pointer-events: none;
+  background: rgba(5, 18, 30, 0.88);
+  backdrop-filter: blur(14px);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+  animation: tooltipIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.map-tooltip-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.map-tooltip-tag {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+/* ── MapLibre attribution dark-theme override ── */
+.maplibregl-ctrl-attrib {
+  background: rgba(5, 18, 30, 0.70) !important;
+  color: rgba(255,255,255,0.35) !important;
+  font-size: 10px !important;
+}
+.maplibregl-ctrl-attrib a { color: rgba(255,255,255,0.35) !important; }

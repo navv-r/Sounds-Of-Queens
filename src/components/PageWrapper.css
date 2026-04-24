@@ -1,0 +1,11 @@
+.page-wrapper {
+  opacity: 0;
+  transform: translateY(48px);
+  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  min-height: 100vh;
+}
+
+.page-wrapper--in {
+  opacity: 1;
+  transform: translateY(0);
+}
